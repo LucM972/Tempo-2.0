@@ -166,6 +166,7 @@ with st.form("form_flux"):
 
 if st.session_state.flux_data:
     st.subheader("📑 Historique des flux")
+    index_to_delete = None
     for i, f in enumerate(st.session_state.flux_data):
         col1, col2, col3, col4 = st.columns([2, 2, 2, 1])
         with col1:
@@ -176,8 +177,11 @@ if st.session_state.flux_data:
             st.write(format_euro(f["montant"]))
         with col4:
             if st.button("❌", key=f"delete_{i}"):
-                st.session_state.flux_data.pop(i)
-                st.experimental_rerun()
+                index_to_delete = i
+
+    if index_to_delete is not None:
+        st.session_state.flux_data.pop(index_to_delete)
+        st.rerun()
 
     total_verse = sum(f['montant'] for f in st.session_state.flux_data if f['type'] == 'Versement')
     total_rembourse = sum(f['montant'] for f in st.session_state.flux_data if f['type'] == 'Remboursement')
