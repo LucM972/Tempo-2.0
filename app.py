@@ -16,21 +16,32 @@ def format_euro(val):
 def format_date_fr(dt):
     return dt.strftime("%d/%m/%Y")
 
-def calcul_interets(flux, date_signature, taux, duree_annees=5):
-    date_debut = parse_date(date_signature)
-    resultats = []
-
+def generer_periodes(date_debut, nb_periodes):
     periodes = []
     courant = date_debut
-    for _ in range(duree_annees * 2):
+    for i in range(nb_periodes):
         fin = courant + timedelta(days=182)
-        periodes.append((courant, fin))
+        periodes.append({
+            "n°": i + 1,
+            "debut": courant,
+            "fin": fin,
+            "taux": 0.0  # Valeur initiale, à saisir manuellement
+        })
         courant = fin
+    return periodes
 
+def calcul_echeancier(flux, periodes):
     solde = 0.0
-    for debut, fin in periodes:
-        interets = 0.0
+    resultats = []
+
+    for periode in periodes:
+        debut, fin = periode['debut'], periode['fin']
+        taux = periode['taux']
         courant = debut
+        interets = 0.0
+        montant_prete = 0.0
+        montant_rembourse = 0.0
+
         flux_periode = [f for f in flux if debut <= parse_date(f['date']) < fin]
         flux_periode.sort(key=lambda x: parse_date(x['date']))
 
@@ -42,27 +53,47 @@ def calcul_interets(flux, date_signature, taux, duree_annees=5):
 
             if f['type'] == 'Versement':
                 solde += f['montant']
+                montant_prete += f['montant']
             elif f['type'] == 'Remboursement':
                 solde -= f['montant']
+                montant_rembourse += f['montant']
 
         jours = days_between(courant, fin)
         interets += solde * (jours / 365) * (taux / 100)
 
         resultats.append({
+            "N°": periode['n°'],
             "Période": f"{format_date_fr(debut)} au {format_date_fr(fin)}",
-            "Intérêts dus": format_euro(interets),
-            "Solde final": format_euro(solde)
+            "Montant prêté": format_euro(montant_prete),
+            "Montant remboursé": format_euro(montant_rembourse),
+            "Solde": format_euro(solde),
+            "Durée (j)": days_between(debut, fin),
+            "Taux (%)": f"{taux:.2f}".replace(".", ","),
+            "Intérêts": format_euro(interets)
         })
 
     return pd.DataFrame(resultats)
 
 st.title("🧮 Simulateur de prêt de préfinancement de subvention")
 
-st.sidebar.header("Paramètres du prêt")
-nom_partenaire = st.sidebar.text_input("Nom du partenaire")
+st.sidebar.header("Informations sur le prêt")
+numero_pret = st.sidebar.text_input("Numéro du prêt")
+nom_collectivite = st.sidebar.text_input("Nom de la collectivité")
 date_signature = st.sidebar.date_input("Date de signature du prêt", datetime.today().date())
-taux = st.sidebar.number_input("Taux d'intérêt (%)", value=2.0)
+montant_initial = st.sidebar.number_input("Montant initial du prêt (€)", min_value=0.0, step=100.0)
 duree = st.sidebar.number_input("Durée du prêt (en années)", value=5, step=1)
+
+st.header("📋 Taux par période (manuels)")
+nb_periodes = int(duree * 2)
+if "periodes" not in st.session_state:
+    st.session_state.periodes = generer_periodes(date_signature, nb_periodes)
+
+for periode in st.session_state.periodes:
+    col1, col2 = st.columns([2, 1])
+    with col1:
+        st.markdown(f"**Période {periode['n°']} : {format_date_fr(periode['debut'])} au {format_date_fr(periode['fin'])}**")
+    with col2:
+        periode['taux'] = st.number_input(f"Taux période {periode['n°']} (%)", value=0.0, key=f"taux_{periode['n°']}")
 
 st.header("📥 Saisie des flux")
 if "flux_data" not in st.session_state:
@@ -81,25 +112,16 @@ if st.session_state.flux_data:
     df_flux = pd.DataFrame(st.session_state.flux_data)
     df_flux['date'] = pd.to_datetime(df_flux['date']).dt.strftime('%d/%m/%Y')
     df_flux['montant'] = df_flux['montant'].apply(format_euro)
+    st.subheader("📑 Historique des flux")
     st.table(df_flux)
 
-    st.header("📊 Informations générales")
-    montant_initial = sum(f['montant'] for f in st.session_state.flux_data if f['type'] == 'Versement')
-    remboursements = sum(f['montant'] for f in st.session_state.flux_data if f['type'] == 'Remboursement')
-    reste_a_verser = montant_initial - remboursements
-
-    st.markdown(f"**Nom du partenaire :** {nom_partenaire if nom_partenaire else 'Non renseigné'}")
-    st.markdown(f"**Montant total versé :** {format_euro(montant_initial)}")
-    st.markdown(f"**Remboursé par le subventionneur :** {format_euro(remboursements)}")
-    st.markdown(f"**Reste à rembourser :** {format_euro(reste_a_verser)}")
-
-    st.header("📊 Calcul des intérêts")
-    df_resultats = calcul_interets(st.session_state.flux_data, date_signature, taux, int(duree))
+    st.header("📊 Échéancier détaillé")
+    df_resultats = calcul_echeancier(st.session_state.flux_data, st.session_state.periodes)
     st.dataframe(df_resultats)
 
     st.download_button(
-        label="📥 Télécharger les résultats (Excel)",
+        label="📥 Télécharger l'échéancier (Excel)",
         data=df_resultats.to_csv(index=False).encode('utf-8'),
-        file_name="interets.csv",
+        file_name="echeancier.csv",
         mime="text/csv"
     )
