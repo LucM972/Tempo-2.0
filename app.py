@@ -1,10 +1,10 @@
 import streamlit as st
 import pandas as pd
-from datetime import datetime, timedelta
+from datetime import datetime, date, timedelta
 
 def parse_date(date_str):
-    if isinstance(date_str, datetime):
-        return date_str
+    if isinstance(date_str, (datetime, date)):
+        return datetime.combine(date_str, datetime.min.time())
     return datetime.strptime(date_str, "%Y-%m-%d")
 
 def days_between(d1, d2):
@@ -53,7 +53,7 @@ def calcul_interets(flux, date_signature, taux, duree_annees=5):
 st.title("🧮 Simulateur de prêt de préfinancement de subvention")
 
 st.sidebar.header("Paramètres du prêt")
-date_signature = st.sidebar.date_input("Date de signature du prêt", datetime.today())
+date_signature = st.sidebar.date_input("Date de signature du prêt", datetime.today().date())
 taux = st.sidebar.number_input("Taux d'intérêt (%)", value=2.0)
 duree = st.sidebar.number_input("Durée du prêt (en années)", value=5, step=1)
 
