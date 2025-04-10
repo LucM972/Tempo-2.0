@@ -2,6 +2,8 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime, date, timedelta
 
+st.image("https://upload.wikimedia.org/wikipedia/fr/6/6e/Logo_AFD_2016.svg", width=100)
+
 def parse_date(date_str):
     if isinstance(date_str, (datetime, date)):
         return datetime.combine(date_str, datetime.min.time())
@@ -25,7 +27,7 @@ def generer_periodes(date_debut, nb_periodes):
             "n°": i + 1,
             "debut": courant,
             "fin": fin,
-            "taux": 0.0  # Valeur initiale, à saisir manuellement
+            "taux": 0.0
         })
         courant = fin
     return periodes
@@ -85,7 +87,7 @@ duree = st.sidebar.number_input("Durée du prêt (en années)", value=5, step=1)
 
 st.header("📋 Taux par période (manuels)")
 nb_periodes = int(duree * 2)
-if "periodes" not in st.session_state:
+if "periodes" not in st.session_state or len(st.session_state.periodes) != nb_periodes:
     st.session_state.periodes = generer_periodes(date_signature, nb_periodes)
 
 for periode in st.session_state.periodes:
@@ -93,7 +95,7 @@ for periode in st.session_state.periodes:
     with col1:
         st.markdown(f"**Période {periode['n°']} : {format_date_fr(periode['debut'])} au {format_date_fr(periode['fin'])}**")
     with col2:
-        periode['taux'] = st.number_input(f"Taux période {periode['n°']} (%)", value=0.0, key=f"taux_{periode['n°']}")
+        periode['taux'] = st.number_input(f"Taux période {periode['n°']} (%)", value=periode['taux'], key=f"taux_{periode['n°']}")
 
 st.header("📥 Saisie des flux")
 if "flux_data" not in st.session_state:
@@ -115,9 +117,22 @@ if st.session_state.flux_data:
     st.subheader("📑 Historique des flux")
     st.table(df_flux)
 
+    total_verse = sum(f['montant'] for f in st.session_state.flux_data if f['type'] == 'Versement')
+    total_rembourse = sum(f['montant'] for f in st.session_state.flux_data if f['type'] == 'Remboursement')
+    reste_a_verser = montant_initial - total_verse
+    capital_restant_du = total_verse - total_rembourse
+
+    st.subheader("📌 Informations générales")
+    st.markdown(f"**Nom de la collectivité :** {nom_collectivite if nom_collectivite else 'Non renseigné'}")
+    st.markdown(f"**Montant initial du prêt :** {format_euro(montant_initial)}")
+    st.markdown(f"**Montant total versé :** {format_euro(total_verse)}")
+    st.markdown(f"**Remboursement réalisé :** {format_euro(total_rembourse)}")
+    st.markdown(f"**Reste à verser :** {format_euro(reste_a_verser)}")
+    st.markdown(f"**Capital restandu à date :** {format_euro(capital_restant_du)}")
+
     st.header("📊 Échéancier détaillé")
     df_resultats = calcul_echeancier(st.session_state.flux_data, st.session_state.periodes)
-    st.dataframe(df_resultats)
+    st.table(df_resultats)
 
     st.download_button(
         label="📥 Télécharger l'échéancier (Excel)",
