@@ -5,7 +5,9 @@ from datetime import datetime, date, timedelta
 st.image("https://upload.wikimedia.org/wikipedia/fr/6/6e/Logo_AFD_2016.svg", width=100)
 
 def parse_date(date_str):
-    if isinstance(date_str, (datetime, date)):
+    if isinstance(date_str, datetime):
+        return date_str
+    elif isinstance(date_str, date):
         return datetime.combine(date_str, datetime.min.time())
     return datetime.strptime(date_str, "%Y-%m-%d")
 
@@ -20,7 +22,7 @@ def format_date_fr(dt):
 
 def generer_periodes(date_debut, nb_periodes):
     periodes = []
-    courant = date_debut
+    courant = parse_date(date_debut)
     for i in range(nb_periodes):
         fin = courant + timedelta(days=182)
         periodes.append({
@@ -37,7 +39,7 @@ def calcul_echeancier(flux, periodes):
     resultats = []
 
     for periode in periodes:
-        debut, fin = periode['debut'], periode['fin']
+        debut, fin = parse_date(periode['debut']), parse_date(periode['fin'])
         taux = periode['taux']
         courant = debut
         interets = 0.0
