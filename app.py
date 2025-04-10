@@ -89,8 +89,9 @@ duree = st.sidebar.number_input("Durée du prêt (en années)", value=5, step=1)
 
 st.header("📋 Taux par période (manuels)")
 nb_periodes = int(duree * 2)
-if "periodes" not in st.session_state or len(st.session_state.periodes) != nb_periodes:
+if "periodes" not in st.session_state or st.session_state.get("date_signature") != date_signature:
     st.session_state.periodes = generer_periodes(date_signature, nb_periodes)
+    st.session_state.date_signature = date_signature
 
 for periode in st.session_state.periodes:
     col1, col2 = st.columns([2, 1])
