@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime, date, timedelta
 
-st.image("AFD_logo.svg.png", width=100)
+st.image("in_logo_agence-francaise-de-developpement_afd.png", width=100)
 
 def parse_date(date_str):
     if isinstance(date_str, datetime):
