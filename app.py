@@ -127,7 +127,7 @@ if 'date_signature' not in st.session_state or st.session_state.date_signature !
     st.session_state.date_signature = new_date_signature
     st.session_state.periodes = generer_periodes(new_date_signature, len(st.session_state.periodes) if 'periodes' in st.session_state else 2)
 
-st.header("📋 Taux par période (manuels)")
+st.header("📋 Taux par période")
 if st.button("➕ Ajouter une période"):
     derniere_periode = st.session_state.periodes[-1]
     nouvelle_periode = generer_periodes(derniere_periode['fin'], 1)[0]
