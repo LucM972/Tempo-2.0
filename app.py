@@ -72,7 +72,7 @@ def calcul_echeancier(flux, periodes):
             "Montant remboursé": format_euro(montant_rembourse),
             "Solde": format_euro(solde),
             "Durée (j)": days_between(debut, fin),
-            "Taux (%)": f"{taux:.2f}".replace(".", ","),
+            "Taux (%)": f"{taux:.3f}".replace(".", ","),
             "Intérêts": format_euro(interets)
         })
 
@@ -88,8 +88,9 @@ montant_initial = st.sidebar.number_input("Montant initial du prêt (€)", min_
 duree = st.sidebar.number_input("Durée du prêt (en années)", value=5, step=1)
 
 st.header("📋 Taux par période (manuels)")
-if "periodes" not in st.session_state:
+if "periodes" not in st.session_state or "date_signature_reference" not in st.session_state or st.session_state.date_signature_reference != date_signature:
     st.session_state.periodes = generer_periodes(date_signature, 2)
+    st.session_state.date_signature_reference = date_signature
 
 if st.button("➕ Ajouter une période"):
     derniere_periode = st.session_state.periodes[-1]
@@ -102,7 +103,7 @@ for periode in st.session_state.periodes:
     with col1:
         st.markdown(f"**Période {periode['n°']} : {format_date_fr(periode['debut'])} au {format_date_fr(periode['fin'])}**")
     with col2:
-        periode['taux'] = st.number_input(f"Taux période {periode['n°']} (%)", value=periode['taux'], key=f"taux_{periode['n°']}")
+        periode['taux'] = st.number_input(f"Taux période {periode['n°']} (%)", value=periode['taux'], format="%.3f", key=f"taux_{periode['n°']}")
 
 st.header("📥 Saisie des flux")
 if "flux_data" not in st.session_state:
@@ -123,6 +124,9 @@ if st.session_state.flux_data:
     df_flux['montant'] = df_flux['montant'].apply(format_euro)
     st.subheader("📑 Historique des flux")
     st.table(df_flux)
+
+    if st.button("🗑 Supprimer le dernier flux"):
+        st.session_state.flux_data.pop()
 
     total_verse = sum(f['montant'] for f in st.session_state.flux_data if f['type'] == 'Versement')
     total_rembourse = sum(f['montant'] for f in st.session_state.flux_data if f['type'] == 'Remboursement')
