@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime, date, timedelta
 
-st.image("https://upload.wikimedia.org/wikipedia/fr/6/6e/Logo_AFD_2016.svg", width=100)
+st.image("https://www.afd.fr/sites/afd/files/2020-09/logo-afd-blanc.png", width=100)
 
 def parse_date(date_str):
     if isinstance(date_str, datetime):
@@ -83,15 +83,15 @@ st.title("🧮 Simulateur de prêt de préfinancement de subvention")
 st.sidebar.header("Informations sur le prêt")
 numero_pret = st.sidebar.text_input("Numéro du prêt")
 nom_collectivite = st.sidebar.text_input("Nom de la collectivité")
-date_signature = st.sidebar.date_input("Date de signature du prêt", datetime.today().date())
+new_date_signature = st.sidebar.date_input("Date de signature du prêt", datetime.today().date())
 montant_initial = st.sidebar.number_input("Montant initial du prêt (€)", min_value=0.0, step=100.0)
 duree = st.sidebar.number_input("Durée du prêt (en années)", value=5, step=1)
 
-st.header("📋 Taux par période (manuels)")
-if "periodes" not in st.session_state or "date_signature_reference" not in st.session_state or st.session_state.date_signature_reference != date_signature:
-    st.session_state.periodes = generer_periodes(date_signature, 2)
-    st.session_state.date_signature_reference = date_signature
+if 'date_signature' not in st.session_state or st.session_state.date_signature != new_date_signature:
+    st.session_state.date_signature = new_date_signature
+    st.session_state.periodes = generer_periodes(new_date_signature, len(st.session_state.periodes) if 'periodes' in st.session_state else 2)
 
+st.header("📋 Taux par période (manuels)")
 if st.button("➕ Ajouter une période"):
     derniere_periode = st.session_state.periodes[-1]
     nouvelle_periode = generer_periodes(derniere_periode['fin'], 1)[0]
@@ -125,7 +125,7 @@ if st.session_state.flux_data:
     st.subheader("📑 Historique des flux")
     st.table(df_flux)
 
-    if st.button("🗑 Supprimer le dernier flux"):
+    if st.button("🗑 Supprimer le dernier flux") and st.session_state.flux_data:
         st.session_state.flux_data.pop()
 
     total_verse = sum(f['montant'] for f in st.session_state.flux_data if f['type'] == 'Versement')
