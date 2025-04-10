@@ -36,9 +36,6 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Le reste du code reste inchangé
-
-# === Fonctions ===
 def parse_date(date_str):
     if isinstance(date_str, datetime):
         return date_str
@@ -113,7 +110,6 @@ def calcul_echeancier(flux, periodes):
 
     return pd.DataFrame(resultats)
 
-# === Interface ===
 st.title("🧮 Simulateur de prêt de préfinancement de subvention")
 
 st.sidebar.header("📌 Informations sur le prêt")
@@ -127,7 +123,7 @@ if 'date_signature' not in st.session_state or st.session_state.date_signature !
     st.session_state.date_signature = new_date_signature
     st.session_state.periodes = generer_periodes(new_date_signature, len(st.session_state.periodes) if 'periodes' in st.session_state else 2)
 
-st.header("📋 Taux par période")
+st.header("📋 Taux par période (manuels)")
 if st.button("➕ Ajouter une période"):
     derniere_periode = st.session_state.periodes[-1]
     nouvelle_periode = generer_periodes(derniere_periode['fin'], 1)[0]
@@ -136,6 +132,7 @@ if st.button("➕ Ajouter une période"):
 
 for periode in st.session_state.periodes:
     col1, col2 = st.columns([2, 1])
+    taux_style = "color: red;" if periode['taux'] == 0 else ""
     with col1:
         st.markdown(f"**Période {periode['n°']} : {format_date_fr(periode['debut'])} au {format_date_fr(periode['fin'])}**")
     with col2:
@@ -152,17 +149,30 @@ with st.form("form_flux"):
     ajouter = st.form_submit_button("Ajouter le flux")
 
     if ajouter:
+        # Vérifier si le flux est hors de toute période, ajouter une période automatiquement
+        flux_date = parse_date(date_flux)
+        while flux_date >= st.session_state.periodes[-1]['fin']:
+            derniere_periode = st.session_state.periodes[-1]
+            nouvelle_periode = generer_periodes(derniere_periode['fin'], 1)[0]
+            nouvelle_periode['n°'] = len(st.session_state.periodes) + 1
+            st.session_state.periodes.append(nouvelle_periode)
+
         st.session_state.flux_data.append({"date": str(date_flux), "type": type_flux, "montant": montant})
 
 if st.session_state.flux_data:
-    df_flux = pd.DataFrame(st.session_state.flux_data)
-    df_flux['date'] = pd.to_datetime(df_flux['date']).dt.strftime('%d/%m/%Y')
-    df_flux['montant'] = df_flux['montant'].apply(format_euro)
     st.subheader("📑 Historique des flux")
-    st.table(df_flux)
-
-    if st.button("🗑 Supprimer le dernier flux") and st.session_state.flux_data:
-        st.session_state.flux_data.pop()
+    for i, f in enumerate(st.session_state.flux_data):
+        col1, col2, col3, col4 = st.columns([2, 2, 2, 1])
+        with col1:
+            st.write(f"{format_date_fr(parse_date(f['date']))}")
+        with col2:
+            st.write(f["type"])
+        with col3:
+            st.write(format_euro(f["montant"]))
+        with col4:
+            if st.button("❌", key=f"delete_{i}"):
+                st.session_state.flux_data.pop(i)
+                st.experimental_rerun()
 
     total_verse = sum(f['montant'] for f in st.session_state.flux_data if f['type'] == 'Versement')
     total_rembourse = sum(f['montant'] for f in st.session_state.flux_data if f['type'] == 'Remboursement')
