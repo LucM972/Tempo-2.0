@@ -88,10 +88,14 @@ montant_initial = st.sidebar.number_input("Montant initial du prêt (€)", min_
 duree = st.sidebar.number_input("Durée du prêt (en années)", value=5, step=1)
 
 st.header("📋 Taux par période (manuels)")
-nb_periodes = int(duree * 2)
-if "periodes" not in st.session_state or st.session_state.get("date_signature") != date_signature:
-    st.session_state.periodes = generer_periodes(date_signature, nb_periodes)
-    st.session_state.date_signature = date_signature
+if "periodes" not in st.session_state:
+    st.session_state.periodes = generer_periodes(date_signature, 2)
+
+if st.button("➕ Ajouter une période"):
+    derniere_periode = st.session_state.periodes[-1]
+    nouvelle_periode = generer_periodes(derniere_periode['fin'], 1)[0]
+    nouvelle_periode['n°'] = len(st.session_state.periodes) + 1
+    st.session_state.periodes.append(nouvelle_periode)
 
 for periode in st.session_state.periodes:
     col1, col2 = st.columns([2, 1])
