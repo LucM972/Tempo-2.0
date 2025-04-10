@@ -80,6 +80,7 @@ with st.form("form_flux"):
 if st.session_state.flux_data:
     df_flux = pd.DataFrame(st.session_state.flux_data)
     df_flux['date'] = pd.to_datetime(df_flux['date']).dt.strftime('%d/%m/%Y')
+    df_flux['montant'] = df_flux['montant'].apply(format_euro)
     st.table(df_flux)
 
     st.header("📊 Informations générales")
