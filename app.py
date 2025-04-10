@@ -53,17 +53,22 @@ def format_date_fr(dt):
     return dt.strftime("%d/%m/%Y")
 
 def generer_periodes(date_debut, nb_periodes):
+    from dateutil.relativedelta import relativedelta
+    import calendar
+
     periodes = []
     courant = parse_date(date_debut)
     for i in range(nb_periodes):
-        fin = courant + timedelta(days=182)
+        six_mois_apres = courant + relativedelta(months=6)
+        dernier_jour = calendar.monthrange(six_mois_apres.year, six_mois_apres.month)[1]
+        fin = six_mois_apres.replace(day=dernier_jour)
         periodes.append({
             "n°": i + 1,
             "debut": courant,
             "fin": fin,
             "taux": 0.0
         })
-        courant = fin
+        courant = fin + timedelta(days=1)
     return periodes
 
 def calcul_echeancier(flux, periodes):
