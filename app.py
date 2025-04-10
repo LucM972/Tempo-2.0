@@ -2,7 +2,43 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime, date, timedelta
 
+st.set_page_config(
+    page_title="Simulateur AFD",
+    page_icon="🧮",
+    layout="wide"
+)
 
+st.markdown("""
+    <style>
+    .main {
+        background-color: #1e1e2f;
+        color: #ffffff;
+    }
+    .stButton>button, .stDownloadButton>button {
+        background-color: #3366cc;
+        color: white;
+        border: None;
+        border-radius: 8px;
+        padding: 0.5em 1em;
+    }
+    .stButton>button:hover, .stDownloadButton>button:hover {
+        background-color: #264d99;
+        color: #ffffff;
+    }
+    .stNumberInput>div>div>input {
+        background-color: #262639;
+        color: #ffffff;
+    }
+    .stTextInput>div>div>input, .stDateInput>div>div>input {
+        background-color: #262639;
+        color: #ffffff;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
+# Le reste du code reste inchangé
+
+# === Fonctions ===
 def parse_date(date_str):
     if isinstance(date_str, datetime):
         return date_str
@@ -77,9 +113,10 @@ def calcul_echeancier(flux, periodes):
 
     return pd.DataFrame(resultats)
 
+# === Interface ===
 st.title("🧮 Simulateur de prêt de préfinancement de subvention")
 
-st.sidebar.header("Informations sur le prêt")
+st.sidebar.header("📌 Informations sur le prêt")
 numero_pret = st.sidebar.text_input("Numéro du prêt")
 nom_collectivite = st.sidebar.text_input("Nom de la collectivité")
 new_date_signature = st.sidebar.date_input("Date de signature du prêt", datetime.today().date())
@@ -132,7 +169,7 @@ if st.session_state.flux_data:
     reste_a_verser = montant_initial - total_verse
     capital_restant_du = total_verse - total_rembourse
 
-    st.subheader("📌 Informations générales")
+    st.subheader("📊 Informations générales")
     st.markdown(f"**Nom de la collectivité :** {nom_collectivite if nom_collectivite else 'Non renseigné'}")
     st.markdown(f"**Montant initial du prêt :** {format_euro(montant_initial)}")
     st.markdown(f"**Montant total versé :** {format_euro(total_verse)}")
@@ -140,9 +177,9 @@ if st.session_state.flux_data:
     st.markdown(f"**Reste à verser :** {format_euro(reste_a_verser)}")
     st.markdown(f"**Capital restandu à date :** {format_euro(capital_restant_du)}")
 
-    st.header("📊 Échéancier détaillé")
+    st.header("📈 Échéancier détaillé")
     df_resultats = calcul_echeancier(st.session_state.flux_data, st.session_state.periodes)
-    st.table(df_resultats)
+    st.dataframe(df_resultats, use_container_width=True, hide_index=True)
 
     st.download_button(
         label="📥 Télécharger l'échéancier (Excel)",
