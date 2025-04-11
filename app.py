@@ -65,6 +65,7 @@ def generer_periodes_afd(date_debut_periode1, date_fin_periode1, nb_periodes):
     periodes = []
     debut = date_debut_periode1
     fin = date_fin_periode1
+    duree = fin - debut
 
     for i in range(nb_periodes):
         periodes.append({
@@ -74,7 +75,7 @@ def generer_periodes_afd(date_debut_periode1, date_fin_periode1, nb_periodes):
             "taux": 0.0
         })
         debut = fin + timedelta(days=1)
-        fin = debut + (date_fin_periode1 - date_debut_periode1)
+        fin = debut + duree
 
     return periodes
 
@@ -123,21 +124,14 @@ def calcul_echeancier(flux, periodes):
     return pd.DataFrame(resultats)
 
 
-
-
-
 st.title("🧮 Simulateur de prêt de préfinancement de subvention")
 
-# Définir automatiquement la date de début/fin de la première période après calcul de la signature
 nom_collectivite = st.sidebar.text_input("Nom de la collectivité")
 montant_initial = st.sidebar.number_input("Montant initial du prêt (€)", min_value=0.0, step=100.0)
 
-# Récupération ou initialisation des dates de période basées sur la signature
 if 'debut_periode_str' not in st.session_state:
-    st.session_state.debut_periode_str = date.today().strftime("%d/%m/%Y")
-    six_months_later = (date.today() + timedelta(days=183)).replace(day=1)
-    last_day = (six_months_later + timedelta(days=32)).replace(day=1) - timedelta(days=1)
-    st.session_state.fin_periode_str = last_day.strftime("%d/%m/%Y")
+    st.session_state.debut_periode_str = "29/02/2024"
+    st.session_state.fin_periode_str = "31/08/2024"
 
 debut_periode_str = st.sidebar.text_input("Début de la 1ère période (jj/mm/aaaa)", value=st.session_state.debut_periode_str)
 fin_periode_str = st.sidebar.text_input("Fin de la 1ère période (jj/mm/aaaa)", value=st.session_state.fin_periode_str)
@@ -145,18 +139,23 @@ fin_periode_str = st.sidebar.text_input("Fin de la 1ère période (jj/mm/aaaa)",
 try:
     date_debut_periode = datetime.strptime(debut_periode_str, "%d/%m/%Y")
     date_fin_periode = datetime.strptime(fin_periode_str, "%d/%m/%Y")
+    st.session_state.debut_periode_str = debut_periode_str
+    st.session_state.fin_periode_str = fin_periode_str
 except ValueError:
     st.sidebar.error("❌ Dates de période invalides. Format attendu : jj/mm/aaaa")
     date_debut_periode = date.today()
     date_fin_periode = date.today() + timedelta(days=180)
 
-    
 if 'periodes' not in st.session_state:
     st.session_state.periodes = generer_periodes_afd(date_debut_periode, date_fin_periode, 2)
 
 st.header("📋 Taux par période (manuels)")
 if st.button("➕ Ajouter une période"):
-    st.session_state.periodes += generer_periodes_afd(st.session_state.periodes[-1]['fin'] + timedelta(days=1), 1)
+    st.session_state.periodes += generer_periodes_afd(
+        parse_date(st.session_state.periodes[-1]['fin']) + timedelta(days=1),
+        parse_date(st.session_state.periodes[-1]['fin']) + (date_fin_periode - date_debut_periode),
+        1
+    )
 
 for periode in st.session_state.periodes:
     col1, col2 = st.columns([2, 1])
@@ -183,8 +182,12 @@ with st.form("form_flux"):
 
     if ajouter and date_flux:
         flux_date = parse_date(date_flux)
-        while flux_date >= st.session_state.periodes[-1]['fin']:
-            st.session_state.periodes += generer_periodes_afd(st.session_state.periodes[-1]['fin'] + timedelta(days=1), 1)
+        while flux_date > parse_date(st.session_state.periodes[-1]['fin']):
+            st.session_state.periodes += generer_periodes_afd(
+                parse_date(st.session_state.periodes[-1]['fin']) + timedelta(days=1),
+                parse_date(st.session_state.periodes[-1]['fin']) + (date_fin_periode - date_debut_periode),
+                1
+            )
 
         st.session_state.flux_data.append({"date": str(date_flux), "type": type_flux, "montant": montant})
 
