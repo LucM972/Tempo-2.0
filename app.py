@@ -129,6 +129,7 @@ def calcul_echeancier(flux, periodes):
 st.title("🧮 Simulateur de prêt de préfinancement de subvention")
 
 # Définir automatiquement la date de début/fin de la première période après calcul de la signature
+nom_collectivite = st.sidebar.text_input("Nom de la collectivité")
 montant_initial = st.sidebar.number_input("Montant initial du prêt (€)", min_value=0.0, step=100.0)
 
 # Récupération ou initialisation des dates de période basées sur la signature
