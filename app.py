@@ -153,7 +153,7 @@ st.session_state.fin_periode_str = st.sidebar.text_input("Fin de la 1ère pério
 try:
     date_debut_periode = datetime.strptime(st.session_state.debut_periode_str, "%d/%m/%Y")
     date_fin_periode = datetime.strptime(st.session_state.fin_periode_str, "%d/%m/%Y")
-    except ValueError:
+except ValueError:
         st.sidebar.error("❌ Dates de période invalides. Format attendu : jj/mm/aaaa")
         date_debut_periode = new_date_signature
         date_fin_periode = new_date_signature + timedelta(days=180)
