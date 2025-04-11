@@ -122,7 +122,22 @@ def calcul_echeancier(flux, periodes):
 
     return pd.DataFrame(resultats)
 
-# Interface principale
+# Saisie manuelle du début et de la fin de la première période
+st.sidebar.markdown("---")
+st.sidebar.markdown("### 📆 Définir la première période")
+
+debut_periode_str = st.sidebar.text_input("Début de la 1ère période (jj/mm/aaaa)", value="01/04/2025")
+fin_periode_str = st.sidebar.text_input("Fin de la 1ère période (jj/mm/aaaa)", value="30/09/2025")
+
+try:
+    date_debut_periode = datetime.strptime(debut_periode_str, "%d/%m/%Y")
+    date_fin_periode = datetime.strptime(fin_periode_str, "%d/%m/%Y")
+except ValueError:
+    st.sidebar.error("❌ Dates de période invalides. Format attendu : jj/mm/aaaa")
+    date_debut_periode = new_date_signature
+    date_fin_periode = new_date_signature + timedelta(days=180)
+
+
 
 st.title("🧮 Simulateur de prêt de préfinancement de subvention")
 
@@ -133,7 +148,7 @@ date_signature_str = st.sidebar.text_input("Date de signature du prêt (jj/mm/aa
 try:
     new_date_signature = datetime.strptime(date_signature_str, "%d/%m/%Y").date()
 except ValueError:
-    st.sidebar.error("❌ Dates de période invalides. Format attendu : jj/mm/aaaa")
+    st.sidebar.error("❌ Format invalide. Utilisez jj/mm/aaaa")
     date_debut_periode = new_date_signature
     date_fin_periode = new_date_signature + timedelta(days=180)
 
