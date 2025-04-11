@@ -159,7 +159,11 @@ try:
 except ValueError:
     st.sidebar.error("❌ Format invalide. Utilisez jj/mm/aaaa")
     new_date_signature = date.today()
+    new_date_signature = date.today()
 montant_initial = st.sidebar.number_input("Montant initial du prêt (€)", min_value=0.0, step=100.0)
+try:
+    new_date_signature = datetime.strptime(date_signature_str, "%d/%m/%Y").date()
+except ValueError:
     st.sidebar.error("❌ Format invalide. Utilisez jj/mm/aaaa")
     date_debut_periode = new_date_signature
     date_fin_periode = new_date_signature + timedelta(days=180)
