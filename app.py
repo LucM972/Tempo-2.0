@@ -130,9 +130,24 @@ st.title("🧮 Simulateur de prêt de préfinancement de subvention")
 
 # Définir automatiquement la date de début/fin de la première période après calcul de la signature
 montant_initial = st.sidebar.number_input("Montant initial du prêt (€)", min_value=0.0, step=100.0)
-    st.sidebar.error("❌ Format invalide. Utilisez jj/mm/aaaa")
-    date_debut_periode = new_date_signature
-    date_fin_periode = new_date_signature + timedelta(days=180)
+
+# Récupération ou initialisation des dates de période basées sur la signature
+if 'debut_periode_str' not in st.session_state:
+    st.session_state.debut_periode_str = date.today().strftime("%d/%m/%Y")
+    six_months_later = (date.today() + timedelta(days=183)).replace(day=1)
+    last_day = (six_months_later + timedelta(days=32)).replace(day=1) - timedelta(days=1)
+    st.session_state.fin_periode_str = last_day.strftime("%d/%m/%Y")
+
+debut_periode_str = st.sidebar.text_input("Début de la 1ère période (jj/mm/aaaa)", value=st.session_state.debut_periode_str)
+fin_periode_str = st.sidebar.text_input("Fin de la 1ère période (jj/mm/aaaa)", value=st.session_state.fin_periode_str)
+
+try:
+    date_debut_periode = datetime.strptime(debut_periode_str, "%d/%m/%Y")
+    date_fin_periode = datetime.strptime(fin_periode_str, "%d/%m/%Y")
+except ValueError:
+    st.sidebar.error("❌ Dates de période invalides. Format attendu : jj/mm/aaaa")
+    date_debut_periode = date.today()
+    date_fin_periode = date.today() + timedelta(days=180)
 
     
 if 'periodes' not in st.session_state:
