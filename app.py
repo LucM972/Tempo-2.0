@@ -120,7 +120,12 @@ st.title("🧮 Simulateur de prêt de préfinancement de subvention")
 st.sidebar.header("📌 Informations sur le prêt")
 numero_pret = st.sidebar.text_input("Numéro du prêt")
 nom_collectivite = st.sidebar.text_input("Nom de la collectivité")
-new_date_signature = st.sidebar.date_input("Date de signature du prêt", datetime.today().date())
+date_signature_str = st.sidebar.text_input("Date de signature du prêt (jj/mm/aaaa)", value="01/01/2025")
+try:
+    new_date_signature = datetime.strptime(date_signature_str, "%d/%m/%Y").date()
+except ValueError:
+    st.sidebar.error("❌ Format invalide. Utilisez jj/mm/aaaa")
+    new_date_signature = datetime.today().date()
 montant_initial = st.sidebar.number_input("Montant initial du prêt (€)", min_value=0.0, step=100.0)
 duree = st.sidebar.number_input("Durée du prêt (en années)", value=5, step=1)
 
@@ -148,7 +153,13 @@ if "flux_data" not in st.session_state:
     st.session_state.flux_data = []
 
 with st.form("form_flux"):
-    date_flux = st.date_input("Date du flux")
+    date_flux_str = st.text_input("Date du flux (jj/mm/aaaa)", value="01/01/2025")
+    try:
+        date_flux = datetime.strptime(date_flux_str, "%d/%m/%Y").date()
+    except ValueError:
+        st.error("❌ Format invalide. Utilisez jj/mm/aaaa")
+        date_flux = None
+
     type_flux = st.selectbox("Type de flux", ["Versement", "Remboursement"])
     montant = st.number_input("Montant (€)", min_value=0.0, step=100.0)
     ajouter = st.form_submit_button("Ajouter le flux")
