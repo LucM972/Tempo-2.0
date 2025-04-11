@@ -153,10 +153,13 @@ if 'periodes' not in st.session_state:
     st.session_state.periodes = generer_periodes_afd(date_debut_periode, date_fin_periode, 2)
 
 st.sidebar.header("📌 Informations sur le prêt")
-montant_initial = st.sidebar.number_input("Montant initial du prêt (€)", min_value=0.0, step=100.0)
+date_signature_str = st.sidebar.text_input("Date de signature du prêt (jj/mm/aaaa)", value="01/01/2025")
 try:
     new_date_signature = datetime.strptime(date_signature_str, "%d/%m/%Y").date()
 except ValueError:
+    st.sidebar.error("❌ Format invalide. Utilisez jj/mm/aaaa")
+    new_date_signature = date.today()
+montant_initial = st.sidebar.number_input("Montant initial du prêt (€)", min_value=0.0, step=100.0)
     st.sidebar.error("❌ Format invalide. Utilisez jj/mm/aaaa")
     date_debut_periode = new_date_signature
     date_fin_periode = new_date_signature + timedelta(days=180)
