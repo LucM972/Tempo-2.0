@@ -61,33 +61,20 @@ def format_euro(val):
 def format_date_fr(dt):
     return dt.strftime("%d/%m/%Y")
 
-def generer_periodes_afd(date_signature, nb_periodes):
-    from dateutil.relativedelta import relativedelta
-
+def generer_periodes_afd(date_debut_periode1, date_fin_periode1, nb_periodes):
     periodes = []
-    annee = date_signature.year
-
-    if date_signature <= datetime(annee, 7, 31).date():
-        debut = datetime(annee, 1, 15)
-    else:
-        debut = datetime(annee, 8, 1)
+    debut = date_debut_periode1
+    fin = date_fin_periode1
 
     for i in range(nb_periodes):
-        if debut.month == 1:
-            fin = datetime(debut.year, 7, 31)
-        elif debut.month == 8:
-            fin = datetime(debut.year + 1, 1, 31)
-        else:
-            raise ValueError("Mois de début invalide")
-
         periodes.append({
             "n°": i + 1,
             "debut": debut,
             "fin": fin,
             "taux": 0.0
         })
-
         debut = fin + timedelta(days=1)
+        fin = debut + (date_fin_periode1 - date_debut_periode1)
 
     return periodes
 
@@ -153,7 +140,21 @@ duree = st.sidebar.number_input("Durée du prêt (en années)", value=5, step=1)
 
 if 'date_signature' not in st.session_state or st.session_state.date_signature != new_date_signature:
     st.session_state.date_signature = new_date_signature
-    st.session_state.periodes = generer_periodes_afd(new_date_signature, 2)
+
+    st.sidebar.markdown("---")
+    st.sidebar.markdown("### 📆 Définir la première échéance")
+    debut_periode_str = st.sidebar.text_input("Début de la 1ère période (jj/mm/aaaa)", value="01/04/2025")
+    fin_periode_str = st.sidebar.text_input("Fin de la 1ère période (jj/mm/aaaa)", value="30/09/2025")
+
+    try:
+        date_debut_periode = datetime.strptime(debut_periode_str, "%d/%m/%Y")
+        date_fin_periode = datetime.strptime(fin_periode_str, "%d/%m/%Y")
+    except ValueError:
+        st.sidebar.error("❌ Dates de période invalides. Format attendu : jj/mm/aaaa")
+        date_debut_periode = new_date_signature
+        date_fin_periode = new_date_signature + timedelta(days=180)
+
+    st.session_state.periodes = generer_periodes_afd(date_debut_periode, date_fin_periode, 2)
 
 st.header("📋 Taux par période (manuels)")
 if st.button("➕ Ajouter une période"):
