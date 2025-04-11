@@ -122,30 +122,39 @@ def calcul_echeancier(flux, periodes):
 
     return pd.DataFrame(resultats)
 
-# Saisie manuelle du début et de la fin de la première période
-st.sidebar.markdown("---")
-st.sidebar.markdown("### 📆 Définir la première période")
 
-debut_periode_str = st.sidebar.text_input("Début de la 1ère période (jj/mm/aaaa)", value="01/04/2025")
-fin_periode_str = st.sidebar.text_input("Fin de la 1ère période (jj/mm/aaaa)", value="30/09/2025")
-
-try:
-    date_debut_periode = datetime.strptime(debut_periode_str, "%d/%m/%Y")
-    date_fin_periode = datetime.strptime(fin_periode_str, "%d/%m/%Y")
-except ValueError:
-    st.sidebar.error("❌ Dates de période invalides. Format attendu : jj/mm/aaaa")
-    date_debut_periode = new_date_signature
-    date_fin_periode = new_date_signature + timedelta(days=180)
 
 
 
 st.title("🧮 Simulateur de prêt de préfinancement de subvention")
 
-st.sidebar.header("📌 Informations sur le prêt")
-numero_pret = st.sidebar.text_input("Numéro du prêt")
-nom_collectivite = st.sidebar.text_input("Nom de la collectivité")
-date_signature_str = st.sidebar.text_input("Date de signature du prêt (jj/mm/aaaa)", value="01/01/2025")
+# Saisie manuelle du début et de la fin de la première période
+st.sidebar.markdown("---")
+st.sidebar.markdown("### 📆 Définir la première période")
+
+if 'debut_periode_str' not in st.session_state:
+    st.session_state.debut_periode_str = new_date_signature.strftime("%d/%m/%Y")
+    six_months_later = (new_date_signature + timedelta(days=183)).replace(day=1)
+    last_day = (six_months_later + timedelta(days=32)).replace(day=1) - timedelta(days=1)
+    st.session_state.fin_periode_str = last_day.strftime("%d/%m/%Y")
+
+st.session_state.debut_periode_str = st.sidebar.text_input("Début de la 1ère période (jj/mm/aaaa)", value=st.session_state.debut_periode_str)
+st.session_state.fin_periode_str = st.sidebar.text_input("Fin de la 1ère période (jj/mm/aaaa)", value=st.session_state.fin_periode_str)
+
 try:
+    date_debut_periode = datetime.strptime(st.session_state.debut_periode_str, "%d/%m/%Y")
+    date_fin_periode = datetime.strptime(st.session_state.fin_periode_str, "%d/%m/%Y")
+except ValueError:
+    st.sidebar.error("❌ Dates de période invalides. Format attendu : jj/mm/aaaa")
+    date_debut_periode = new_date_signature
+    date_fin_periode = new_date_signature + timedelta(days=180)
+
+if 'periodes' not in st.session_state:
+    st.session_state.periodes = generer_periodes_afd(date_debut_periode, date_fin_periode, 2)
+
+st.sidebar.header("📌 Informations sur le prêt")
+montant_initial = st.sidebar.number_input("Montant initial du prêt (€)", min_value=0.0, step=100.0)
+try:
     new_date_signature = datetime.strptime(date_signature_str, "%d/%m/%Y").date()
 except ValueError:
     st.sidebar.error("❌ Format invalide. Utilisez jj/mm/aaaa")
