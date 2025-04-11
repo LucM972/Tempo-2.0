@@ -123,31 +123,24 @@ def calcul_echeancier(flux, periodes):
 
     return pd.DataFrame(resultats)
 
-
 st.title("🧮 Simulateur de prêt de préfinancement de subvention")
 
 nom_collectivite = st.sidebar.text_input("Nom de la collectivité")
 montant_initial = st.sidebar.number_input("Montant initial du prêt (€)", min_value=0.0, step=100.0)
 
-if 'debut_periode_str' not in st.session_state:
-    st.session_state.debut_periode_str = "29/02/2024"
-    st.session_state.fin_periode_str = "31/08/2024"
-
-debut_periode_str = st.sidebar.text_input("Début de la 1ère période (jj/mm/aaaa)", value=st.session_state.debut_periode_str)
-fin_periode_str = st.sidebar.text_input("Fin de la 1ère période (jj/mm/aaaa)", value=st.session_state.fin_periode_str)
+debut_periode_str = st.sidebar.text_input("Début de la 1ère période (jj/mm/aaaa)", value=st.session_state.get("debut_periode_str", "29/02/2024"))
+fin_periode_str = st.sidebar.text_input("Fin de la 1ère période (jj/mm/aaaa)", value=st.session_state.get("fin_periode_str", "31/08/2024"))
 
 try:
     date_debut_periode = datetime.strptime(debut_periode_str, "%d/%m/%Y")
     date_fin_periode = datetime.strptime(fin_periode_str, "%d/%m/%Y")
     st.session_state.debut_periode_str = debut_periode_str
     st.session_state.fin_periode_str = fin_periode_str
+    st.session_state.periodes = generer_periodes_afd(date_debut_periode, date_fin_periode, len(st.session_state.get('periodes', [])) or 2)
 except ValueError:
     st.sidebar.error("❌ Dates de période invalides. Format attendu : jj/mm/aaaa")
     date_debut_periode = date.today()
     date_fin_periode = date.today() + timedelta(days=180)
-
-if 'periodes' not in st.session_state:
-    st.session_state.periodes = generer_periodes_afd(date_debut_periode, date_fin_periode, 2)
 
 st.header("📋 Taux par période (manuels)")
 if st.button("➕ Ajouter une période"):
