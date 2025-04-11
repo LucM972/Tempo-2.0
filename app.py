@@ -138,8 +138,10 @@ except ValueError:
 montant_initial = st.sidebar.number_input("Montant initial du prêt (€)", min_value=0.0, step=100.0)
 duree = st.sidebar.number_input("Durée du prêt (en années)", value=5, step=1)
 
-if 'date_signature' not in st.session_state or st.session_state.date_signature != new_date_signature:
+if 'date_signature' not in st.session_state:
     st.session_state.date_signature = new_date_signature
+
+if 'date_signature' in st.session_state and st.session_state.date_signature == new_date_signature:
 
     st.sidebar.markdown("---")
     st.sidebar.markdown("### 📆 Définir la première échéance")
