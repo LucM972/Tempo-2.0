@@ -133,32 +133,12 @@ date_signature_str = st.sidebar.text_input("Date de signature du prêt (jj/mm/aa
 try:
     new_date_signature = datetime.strptime(date_signature_str, "%d/%m/%Y").date()
 except ValueError:
-    st.sidebar.error("❌ Format invalide. Utilisez jj/mm/aaaa")
-    new_date_signature = datetime.today().date()
-montant_initial = st.sidebar.number_input("Montant initial du prêt (€)", min_value=0.0, step=100.0)
-duree = st.sidebar.number_input("Durée du prêt (en années)", value=5, step=1)
+    st.sidebar.error("❌ Dates de période invalides. Format attendu : jj/mm/aaaa")
+    date_debut_periode = new_date_signature
+    date_fin_periode = new_date_signature + timedelta(days=180)
 
-if 'date_signature' not in st.session_state:
-    st.session_state.date_signature = new_date_signature
-
-if 'date_debut_periode' not in st.session_state:
-    st.session_state.debut_periode_str = "01/04/2025"
-    st.session_state.fin_periode_str = "30/09/2025"
-
-st.sidebar.markdown("---")
-st.sidebar.markdown("### 📆 Définir la première échéance")
-st.session_state.debut_periode_str = st.sidebar.text_input("Début de la 1ère période (jj/mm/aaaa)", value=st.session_state.debut_periode_str)
-st.session_state.fin_periode_str = st.sidebar.text_input("Fin de la 1ère période (jj/mm/aaaa)", value=st.session_state.fin_periode_str)
-
-try:
-    date_debut_periode = datetime.strptime(st.session_state.debut_periode_str, "%d/%m/%Y")
-    date_fin_periode = datetime.strptime(st.session_state.fin_periode_str, "%d/%m/%Y")
-except ValueError:
-        st.sidebar.error("❌ Dates de période invalides. Format attendu : jj/mm/aaaa")
-        date_debut_periode = new_date_signature
-        date_fin_periode = new_date_signature + timedelta(days=180)
-
-    if 'periodes' not in st.session_state:
+    
+if 'periodes' not in st.session_state:
     st.session_state.periodes = generer_periodes_afd(date_debut_periode, date_fin_periode, 2)
 
 st.header("📋 Taux par période (manuels)")
