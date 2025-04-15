@@ -108,7 +108,7 @@ except ValueError:
     st.stop()
 
 if 'periodes' not in st.session_state:
-    st.session_state.periodes = generer_periodes_afd(date_debut_periode, date_fin_periode, 10)
+    st.session_state.periodes = generer_periodes_afd(date_debut_periode, date_fin_periode, 1)
 
 st.title("🧮 Simulateur de prêt de préfinancement de subvention")
 st.header("📋 Taux par période (manuels)")
@@ -134,7 +134,7 @@ for i, periode in enumerate(st.session_state.periodes):
         st.session_state.periodes[i]['taux'] = taux
 
 if st.button("🔄 Recalculer les périodes"):
-    st.session_state.periodes = generer_periodes_afd(date_debut_periode, date_fin_periode, 10)
+    st.session_state.periodes = generer_periodes_afd(date_debut_periode, date_fin_periode, 1)
     st.experimental_rerun()
 
 st.success("✅ Périodes générées et taux saisis !")
