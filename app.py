@@ -132,8 +132,10 @@ except ValueError:
     st.sidebar.error("❌ Format invalide. Utilisez jj/mm/aaaa")
     st.stop()
 
-if 'periodes' not in st.session_state:
+if 'periodes' not in st.session_state or st.session_state.get("date_debut_memo") != date_debut_str or st.session_state.get("date_fin_memo") != date_fin_str:
     st.session_state.periodes = generer_periodes_afd(date_debut_periode, date_fin_periode, 1)
+    st.session_state.date_debut_memo = date_debut_str
+    st.session_state.date_fin_memo = date_fin_str
 
 # 📋 Taux par période
 st.header("📋 Taux par période (manuels)")
@@ -157,6 +159,8 @@ for i, periode in enumerate(st.session_state.periodes):
 
 if st.button("🔄 Recalculer les périodes"):
     st.session_state.periodes = generer_periodes_afd(date_debut_periode, date_fin_periode, 1)
+    st.session_state.date_debut_memo = date_debut_str
+    st.session_state.date_fin_memo = date_fin_str
     st.experimental_rerun()
 
 # 💸 Saisie des flux
